@@ -1,25 +1,28 @@
-from PyQt4 import QtGui, QtCore
-from PyQt4.phonon import Phonon
+from PyQt4 import QtGui
+from PyQt4.phonon import Phonon# -*- coding: utf-8 -*-
 
 class Window(QtGui.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)
         self.media = Phonon.MediaObject(self)
-        self.media.stateChanged.connect(self.handleStateChanged)
         self.video = Phonon.VideoWidget(self)
-        self.video.setMinimumSize(400, 400)
-        self.audio = Phonon.AudioOutput(Phonon.VideoCategory, self)
-        Phonon.createPath(self.media, self.audio)
         Phonon.createPath(self.media, self.video)
+        self.video.setMinimumSize(400, 400)
+        
+        self.media.stateChanged.connect(self.handleStateChanged)
+        
         self.button = QtGui.QPushButton('Choose File', self)
+        self.play = QtGui.QPushButton('play',self)
+        self.stop = QtGui.QPushButton('stop',self)
         self.button.clicked.connect(self.handleButton)
-        self.list = QtGui.QListWidget(self)
-        self.list.addItems(Phonon.BackendCapabilities.availableMimeTypes())
+        self.play.clicked.connect(self.playVideo)
+        self.stop.clicked.connect(self.stopVideo)
         layout = QtGui.QVBoxLayout(self)
         layout.addWidget(self.video, 1)
         layout.addWidget(self.button)
-        layout.addWidget(self.list)
-
+        layout.addWidget(self.play)
+        layout.addWidget(self.stop)
+        
     def handleButton(self):
         if self.media.state() == Phonon.PlayingState:
             self.media.stop()
@@ -27,19 +30,17 @@ class Window(QtGui.QWidget):
             path = QtGui.QFileDialog.getOpenFileName(self, self.button.text())
             if path:
                 self.media.setCurrentSource(Phonon.MediaSource(path))
-                self.media.play()
-
+                #self.media.play()
+                
     def handleStateChanged(self, newstate, oldstate):
-        if newstate == Phonon.PlayingState:
-            self.button.setText('Stop')
-        elif (newstate != Phonon.LoadingState and
-              newstate != Phonon.BufferingState):
-            self.button.setText('Choose File')
-            if newstate == Phonon.ErrorState:
-                source = self.media.currentSource().fileName()
-                print ('ERROR: could not play:', source.toLocal8Bit().data())
-                print ('  %s' % self.media.errorString().toLocal8Bit().data())
-
+        print newstate
+    
+    def playVideo(self):
+        self.media.play()
+        
+    def stopVideo(self):
+        self.media.stop()
+        
 if __name__ == '__main__':
 
     import sys
